@@ -1,0 +1,150 @@
+services:
+  # Project 1: LLM Playground
+  llm-playground:
+    build:
+      context: .
+      dockerfile: projects/01-llm-playground/Dockerfile
+    ports:
+      - "8001:8000"
+    env_file: .env
+    volumes:
+      - model-cache:/app/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Project 2: Customer Support Chatbot
+  customer-support-chatbot:
+    build:
+      context: .
+      dockerfile: projects/02-customer-support-chatbot/Dockerfile
+    ports:
+      - "8002:8000"
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  # Project 3: Ask-the-Web Agent
+  ask-the-web-agent:
+    build:
+      context: .
+      dockerfile: projects/03-ask-the-web-agent/Dockerfile
+    ports:
+      - "8003:8000"
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Project 4: Deep Research
+  deep-research:
+    build:
+      context: .
+      dockerfile: projects/04-deep-research/Dockerfile
+    ports:
+      - "8004:8000"
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  # Project 5: Image Generation Service
+  image-generation:
+    build:
+      context: .
+      dockerfile: projects/05-image-generation/Dockerfile
+    ports:
+      - "8005:8000"
+    env_file: .env
+    volumes:
+      - generated-images:/app/outputs
+
+  # Project 6: Capstone Multi-Agent Platform
+  capstone-multiagent:
+    build:
+      context: .
+      dockerfile: projects/06-capstone-multiagent/Dockerfile
+    ports:
+      - "8006:8000"
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  # Project 7: Agent RAG System
+  agent-rag:
+    build:
+      context: .
+      dockerfile: projects/07-agent-rag/Dockerfile
+    ports:
+      - "8007:8000"
+    env_file: .env
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  # Project 8: MCP & A2A
+  mcp-a2a:
+    build:
+      context: .
+      dockerfile: projects/08-mcp-a2a/Dockerfile
+    ports:
+      - "8008:8000"
+    env_file: .env
+
+  # Shared Infrastructure
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: aiportfolio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-localdev}
+      POSTGRES_DB: aiportfolio
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aiportfolio"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+  qdrant-data:
+  model-cache:
+  generated-images:

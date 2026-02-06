@@ -1,0 +1,144 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-generation
+  labels:
+    app: image-generation
+    part-of: ai-engineer-portfolio
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: image-generation
+  template:
+    metadata:
+      labels:
+        app: image-generation
+    spec:
+      serviceAccountName: image-generation
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: image-generation
+          image: ai-engineer-portfolio/image-generation:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8005
+              protocol: TCP
+          env:
+            - name: IMG_GEN_ENVIRONMENT
+              value: "production"
+            - name: IMG_GEN_LOG_LEVEL
+              value: "INFO"
+            - name: IMG_GEN_HOST
+              value: "0.0.0.0"
+            - name: IMG_GEN_PORT
+              value: "8005"
+            - name: IMG_GEN_DEFAULT_PROVIDER
+              value: "openai"
+            - name: IMG_GEN_STORAGE_BACKEND
+              value: "s3"
+            - name: IMG_GEN_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: image-generation-secrets
+                  key: openai-api-key
+            - name: IMG_GEN_REPLICATE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: image-generation-secrets
+                  key: replicate-api-token
+            - name: IMG_GEN_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: image-generation-config
+                  key: s3-bucket
+            - name: IMG_GEN_S3_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: image-generation-config
+                  key: s3-region
+            - name: IMG_GEN_REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: image-generation-config
+                  key: redis-url
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          volumeMounts:
+            - name: generated-images
+              mountPath: /app/generated_images
+      volumes:
+        - name: generated-images
+          emptyDir:
+            sizeLimit: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: image-generation
+  labels:
+    app: image-generation
+spec:
+  type: ClusterIP
+  selector:
+    app: image-generation
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: image-generation
+  labels:
+    app: image-generation
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: image-generation-config
+  labels:
+    app: image-generation
+data:
+  s3-bucket: "ai-portfolio-images"
+  s3-region: "us-east-1"
+  redis-url: "redis://redis:6379/1"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: image-generation-secrets
+  labels:
+    app: image-generation
+type: Opaque
+stringData:
+  openai-api-key: "REPLACE_ME"
+  replicate-api-token: "REPLACE_ME"
