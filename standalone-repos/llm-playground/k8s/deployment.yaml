@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-playground
+  labels:
+    app: llm-playground
+    project: "01"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: llm-playground
+  template:
+    metadata:
+      labels:
+        app: llm-playground
+        project: "01"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: llm-playground
+          image: llm-playground:latest
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: llm-playground-secrets
+                  key: anthropic-api-key
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: llm-playground-secrets
+                  key: openai-api-key
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: model-cache
+              mountPath: /app/models
+      volumes:
+        - name: model-cache
+          emptyDir:
+            sizeLimit: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-playground
+  labels:
+    app: llm-playground
+spec:
+  type: ClusterIP
+  selector:
+    app: llm-playground
+  ports:
+    - port: 80
+      targetPort: 8000
+      protocol: TCP
+      name: http
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: llm-playground
+  labels:
+    app: llm-playground
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: llm-playground
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120

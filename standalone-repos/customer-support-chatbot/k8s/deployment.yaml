@@ -1,0 +1,188 @@
+# =============================================================================
+# Kubernetes manifests for Customer Support Chatbot
+# Includes: Deployment, Service, HorizontalPodAutoscaler
+# =============================================================================
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-support-chatbot
+  namespace: default
+  labels:
+    app: customer-support-chatbot
+    component: api
+    version: v0.1.0
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: customer-support-chatbot
+      component: api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: customer-support-chatbot
+        component: api
+        version: v0.1.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/health"
+    spec:
+      serviceAccountName: default
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: chatbot
+          image: customer-support-chatbot:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: chatbot-config
+            - secretRef:
+                name: chatbot-secrets
+          env:
+            - name: CHATBOT_ENVIRONMENT
+              value: "production"
+            - name: CHATBOT_LOG_LEVEL
+              value: "INFO"
+            - name: CHATBOT_HOST
+              value: "0.0.0.0"
+            - name: CHATBOT_PORT
+              value: "8000"
+            - name: CHATBOT_WORKERS
+              value: "2"
+            - name: CHATBOT_PROMPT_TEMPLATE_DIR
+              value: "/app/data/templates"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 10
+          volumeMounts:
+            - name: templates
+              mountPath: /app/data/templates
+              readOnly: true
+      volumes:
+        - name: templates
+          configMap:
+            name: chatbot-prompt-templates
+            optional: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-support-chatbot
+  namespace: default
+  labels:
+    app: customer-support-chatbot
+    component: api
+spec:
+  type: ClusterIP
+  selector:
+    app: customer-support-chatbot
+    component: api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: customer-support-chatbot
+  namespace: default
+  labels:
+    app: customer-support-chatbot
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: customer-support-chatbot
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chatbot-config
+  namespace: default
+  labels:
+    app: customer-support-chatbot
+data:
+  CHATBOT_DEFAULT_MODEL: "claude-sonnet-4-5-20250929"
+  CHATBOT_REDIS_URL: "redis://redis-service:6379/0"
+  CHATBOT_DATABASE_URL: "postgresql+asyncpg://postgres:postgres@postgres-service:5432/chatbot"
+  CHATBOT_MAX_CONVERSATION_HISTORY: "20"
+  CHATBOT_CONVERSATION_TTL_SECONDS: "86400"
+  CHATBOT_MODEL_TEMPERATURE: "0.3"
+  CHATBOT_MODEL_MAX_TOKENS: "2048"

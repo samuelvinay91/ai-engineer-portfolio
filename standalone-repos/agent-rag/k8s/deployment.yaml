@@ -1,0 +1,146 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-rag
+  labels:
+    app: agent-rag
+    component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: agent-rag
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: agent-rag
+        component: api
+    spec:
+      serviceAccountName: agent-rag
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+      containers:
+        - name: agent-rag
+          image: agent-rag:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8007
+              protocol: TCP
+          env:
+            - name: AGENT_RAG_HOST
+              value: "0.0.0.0"
+            - name: AGENT_RAG_PORT
+              value: "8007"
+            - name: AGENT_RAG_QDRANT_URL
+              value: "http://qdrant:6333"
+            - name: AGENT_RAG_REDIS_URL
+              value: "redis://redis:6379/0"
+            - name: AGENT_RAG_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: agent-rag-secrets
+                  key: database-url
+            - name: AGENT_RAG_ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agent-rag-secrets
+                  key: anthropic-api-key
+            - name: AGENT_RAG_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agent-rag-secrets
+                  key: openai-api-key
+            - name: AGENT_RAG_COHERE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: agent-rag-secrets
+                  key: cohere-api-key
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 2Gi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-rag
+  labels:
+    app: agent-rag
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: agent-rag
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agent-rag
+  labels:
+    app: agent-rag
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: agent-rag
+  labels:
+    app: agent-rag
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: agent-rag
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

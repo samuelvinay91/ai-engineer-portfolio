@@ -1,0 +1,154 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deep-research
+  labels:
+    app: deep-research
+    part-of: ai-engineer-portfolio
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: deep-research
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: deep-research
+    spec:
+      serviceAccountName: deep-research
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: deep-research
+          image: deep-research:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: DEEP_RESEARCH_ENVIRONMENT
+              value: "production"
+            - name: DEEP_RESEARCH_LOG_LEVEL
+              value: "INFO"
+            - name: DEEP_RESEARCH_ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: deep-research-secrets
+                  key: anthropic-api-key
+            - name: DEEP_RESEARCH_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: deep-research-secrets
+                  key: openai-api-key
+                  optional: true
+            - name: DEEP_RESEARCH_TAVILY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: deep-research-secrets
+                  key: tavily-api-key
+                  optional: true
+            - name: DEEP_RESEARCH_REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: deep-research-secrets
+                  key: redis-url
+                  optional: true
+            - name: DEEP_RESEARCH_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: deep-research-secrets
+                  key: database-url
+                  optional: true
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 100Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: deep-research
+  labels:
+    app: deep-research
+spec:
+  type: ClusterIP
+  selector:
+    app: deep-research
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: deep-research
+  labels:
+    app: deep-research
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: deep-research
+  labels:
+    app: deep-research
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: deep-research
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
