@@ -27,6 +27,9 @@ PROJECTS=(
   "mcp-a2a"
   "ucp-merchant-server"
   "ucp-shopping-agent"
+  "compliance-audit-agents"
+  "incident-response-adk"
+  "contract-lifecycle-crew"
 )
 
 # Topics for each repo
@@ -41,6 +44,9 @@ declare -A TOPICS=(
   ["mcp-a2a"]="mcp model-context-protocol a2a agent-to-agent agentcard interoperability fastapi docker ai-engineer"
   ["ucp-merchant-server"]="ucp universal-commerce-protocol agentic-commerce ap2 checkout-state-machine ecdsa mcp fastapi docker ai-engineer"
   ["ucp-shopping-agent"]="ucp universal-commerce-protocol agentic-commerce shopping-agent langgraph multi-merchant comparison mcp fastapi docker ai-engineer"
+  ["compliance-audit-agents"]="microsoft-agent-framework compliance audit sox gdpr soc2 graph-workflow middleware human-in-the-loop fastapi docker ai-engineer"
+  ["incident-response-adk"]="google-adk agent-development-kit incident-response sre devops sequential-agent parallel-agent loop-agent fastapi docker ai-engineer"
+  ["contract-lifecycle-crew"]="crewai crew-based-agents contract-lifecycle legal-tech risk-assessment negotiation flow-orchestration fastapi docker ai-engineer"
 )
 
 # Descriptions
@@ -55,6 +61,9 @@ declare -A DESCRIPTIONS=(
   ["mcp-a2a"]="MCP Server/Client implementation and A2A protocol with AgentCards for agent interoperability"
   ["ucp-merchant-server"]="UCP-compliant merchant platform with checkout state machine, AP2 payment verification, and MCP tool bindings"
   ["ucp-shopping-agent"]="AI shopping agent that discovers UCP merchants, compares products, optimizes multi-vendor orders with LangGraph"
+  ["compliance-audit-agents"]="Multi-agent compliance audit system with graph workflows, middleware pipelines, and human-in-the-loop - Microsoft Agent Framework patterns"
+  ["incident-response-adk"]="Automated IT incident response with SequentialAgent, ParallelAgent, LoopAgent - Google ADK patterns"
+  ["contract-lifecycle-crew"]="End-to-end contract lifecycle management with role-based Crews and event-driven Flows - CrewAI patterns"
 )
 
 create_repo() {
