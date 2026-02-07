@@ -139,7 +139,6 @@ def should_iterate(state: ResearchState) -> Literal["iterate", "report"]:
 ### Option 1: Docker (Recommended)
 
 ```bash
-# From the repository root
 docker build -f Dockerfile \
   -t deep-research .
 
@@ -155,13 +154,12 @@ docker run -p 8000:8000 \
 python -m venv .venv
 source .venv/bin/activate
 
-pip install -e .
-pip install -e "projects/04-deep-research[dev]"
+pip install -e ".[dev]"
 
 export DEEP_RESEARCH_ANTHROPIC_API_KEY=your-key
 export DEEP_RESEARCH_TAVILY_API_KEY=your-tavily-key
 
-cd projects/04-deep-research
+# Already in project root
 python -m deep_research.main
 ```
 

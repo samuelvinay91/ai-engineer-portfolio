@@ -114,7 +114,7 @@ curl http://localhost:8008/.well-known/agent.json
 
 ```bash
 # Navigate to the project
-cd projects/08-mcp-a2a
+# Already in project root
 
 # Create virtual environment
 python -m venv .venv && source .venv/bin/activate

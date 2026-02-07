@@ -82,7 +82,6 @@ A production-grade customer support chatbot that combines advanced prompt engine
 ### Option 1: Docker (Recommended)
 
 ```bash
-# From the repository root
 docker build -f Dockerfile \
   -t customer-support-chatbot .
 
@@ -100,8 +99,7 @@ python -m venv .venv
 source .venv/bin/activate
 
 # Install dependencies
-pip install -e .
-pip install -e "projects/02-customer-support-chatbot[dev]"
+pip install -e ".[dev]"
 
 # Set environment variables
 export CHATBOT_ANTHROPIC_API_KEY=your-key
@@ -110,7 +108,7 @@ export CHATBOT_ANTHROPIC_API_KEY=your-key
 docker run -d -p 6379:6379 redis:7-alpine
 
 # Run the server
-cd projects/02-customer-support-chatbot
+# Already in project root
 python -m customer_support.main
 ```
 

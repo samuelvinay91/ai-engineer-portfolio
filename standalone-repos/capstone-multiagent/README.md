@@ -108,7 +108,7 @@ curl http://localhost:8000/health
 
 ```bash
 # Navigate to the project
-cd projects/06-capstone-multiagent
+# Already in project root
 
 # Create virtual environment
 python -m venv .venv && source .venv/bin/activate

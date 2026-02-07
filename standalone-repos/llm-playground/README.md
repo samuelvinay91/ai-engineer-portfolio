@@ -58,8 +58,7 @@ An interactive API for exploring the building blocks of Large Language Models. T
 ### Option 1: Docker (Recommended)
 
 ```bash
-# From the repository root
-docker build -f Dockerfile -t llm-playground .
+docker build -t llm-playground .
 
 # Run with your API keys
 docker run -p 8000:8000 \
@@ -76,8 +75,7 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 # Install the common library and this project
-pip install -e .
-pip install -e "projects/01-llm-playground[dev]"
+pip install -e ".[dev]"
 
 # Set environment variables
 export ANTHROPIC_API_KEY=your-key
@@ -92,7 +90,7 @@ python -m llm_playground.main
 ```bash
 # Install dependencies with uv
 uv venv && source .venv/bin/activate
-uv pip install -e . -e "projects/01-llm-playground[dev]"
+uv pip install -e . -e ".[dev]"
 
 # Set API keys and run
 export ANTHROPIC_API_KEY=your-key

@@ -101,7 +101,7 @@ curl http://localhost:8007/health
 
 ```bash
 # Navigate to the project
-cd projects/07-agent-rag
+# Already in project root
 
 # Create virtual environment
 python -m venv .venv && source .venv/bin/activate

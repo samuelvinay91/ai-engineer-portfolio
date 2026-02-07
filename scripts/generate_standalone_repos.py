@@ -807,7 +807,7 @@ def generate_readme(proj: dict) -> str:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/{proj["name"]}.git
+git clone https://github.com/samuelvinay91/{proj["name"]}.git
 cd {proj["name"]}
 
 # Copy environment variables
@@ -826,7 +826,7 @@ The API will be available at **http://localhost:{proj["port"]}**. Docs at **http
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/{proj["name"]}.git
+git clone https://github.com/samuelvinay91/{proj["name"]}.git
 cd {proj["name"]}
 
 # Build and run
@@ -845,7 +845,7 @@ The API will be available at **http://localhost:{proj["port"]}**. Docs at **http
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED.svg?logo=docker)](Dockerfile)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com)
-[![CI](https://github.com/YOUR_USERNAME/{proj["name"]}/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/{proj["name"]}/actions)
+[![CI](https://github.com/samuelvinay91/{proj["name"]}/actions/workflows/ci.yml/badge.svg)](https://github.com/samuelvinay91/{proj["name"]}/actions)
 
 {proj["desc"]}
 {infra_note}
@@ -857,7 +857,7 @@ The API will be available at **http://localhost:{proj["port"]}**. Docs at **http
 
 ```bash
 # Clone and setup
-git clone https://github.com/YOUR_USERNAME/{proj["name"]}.git
+git clone https://github.com/samuelvinay91/{proj["name"]}.git
 cd {proj["name"]}
 
 # Create virtual environment
@@ -1045,32 +1045,34 @@ def generate_repo(proj: dict) -> None:
     readme_origin = ROOT / "projects" / proj["dir"] / "README.md"
     if readme_origin.exists():
         original_readme = readme_origin.read_text()
-        # Fix relative paths in the original README
-        fixed_readme = original_readme.replace("../../LICENSE", "LICENSE")
+        fixed_readme = original_readme
+
+        # Fix license path
+        fixed_readme = fixed_readme.replace("../../LICENSE", "LICENSE")
+
+        # Fix all monorepo project path references
+        fixed_readme = fixed_readme.replace(f"projects/{proj['dir']}/Dockerfile", "Dockerfile")
+        fixed_readme = fixed_readme.replace(f"-f projects/{proj['dir']}/Dockerfile -t", "-t")
+        fixed_readme = fixed_readme.replace(f"cd projects/{proj['dir']}", "# Already in project root")
+        fixed_readme = fixed_readme.replace(f"projects/{proj['dir']}", ".")
+
+        # Fix common library references
+        fixed_readme = fixed_readme.replace("pip install -e libs/common\n", "")
+        fixed_readme = fixed_readme.replace("pip install -e libs/common\r\n", "")
+        fixed_readme = fixed_readme.replace("pip install -e . -e ", "pip install -e ")
+        fixed_readme = fixed_readme.replace("uv pip install -e . -e ", "uv pip install -e ")
         fixed_readme = fixed_readme.replace("libs/common", ".")
+
+        # Fix "From the repository root" comments
+        fixed_readme = fixed_readme.replace("# From the repository root\n", "")
+        fixed_readme = fixed_readme.replace("# From the repository root", "")
+
+        # Fix Docker build command
         fixed_readme = fixed_readme.replace(
-            f"projects/{proj['dir']}/Dockerfile", "Dockerfile"
-        )
-        fixed_readme = fixed_readme.replace(
-            f"-f projects/{proj['dir']}/Dockerfile -t", f"-t"
-        )
-        fixed_readme = fixed_readme.replace(
-            f"pip install -e libs/common\npip install -e \"projects/{proj['dir']}[dev]\"",
-            'pip install -e ".[dev]"',
-        )
-        fixed_readme = fixed_readme.replace(
-            f"pip install -e libs/common -e \"projects/{proj['dir']}[dev]\"",
-            'pip install -e ".[dev]"',
-        )
-        fixed_readme = fixed_readme.replace(
-            f"uv pip install -e libs/common -e \"projects/{proj['dir']}[dev]\"",
-            'uv pip install -e ".[dev]"',
-        )
-        # Fix Docker build commands to use standalone context
-        fixed_readme = fixed_readme.replace(
-            f"docker build -f projects/{proj['dir']}/Dockerfile -t {proj['name']} .",
+            f"docker build -f Dockerfile -t {proj['name']} .",
             f"docker build -t {proj['name']} .",
         )
+
         (repo_dir / "README.md").write_text(fixed_readme)
     else:
         (repo_dir / "README.md").write_text(generate_readme(proj))
@@ -1119,7 +1121,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
 STANDALONE_DIR="${{SCRIPT_DIR}}/standalone-repos"
-GITHUB_USER="${{GITHUB_USER:-$(gh api user -q .login 2>/dev/null || echo "YOUR_USERNAME")}}"
+GITHUB_USER="${{GITHUB_USER:-$(gh api user -q .login 2>/dev/null || echo "samuelvinay91")}}"
 DRY_RUN="${{DRY_RUN:-0}}"
 
 # Projects
@@ -1222,7 +1224,7 @@ def main() -> None:
     print(f"\nAll {len(PROJECTS)} standalone repos generated successfully!")
     print(f"\nNext steps:")
     print(f"  1. Review repos in: {STANDALONE_DIR}")
-    print(f"  2. Update YOUR_USERNAME in READMEs and badges")
+    print(f"  2. Update samuelvinay91 in READMEs and badges")
     print(f"  3. Run: ./create-github-repos.sh")
     print(f"     Or for a dry run: DRY_RUN=1 ./create-github-repos.sh")
 

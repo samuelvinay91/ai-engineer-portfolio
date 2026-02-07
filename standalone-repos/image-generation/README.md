@@ -85,7 +85,7 @@ curl http://localhost:8005/health
 
 ```bash
 # Navigate to the project
-cd projects/05-image-generation
+# Already in project root
 
 # Create virtual environment
 python -m venv .venv && source .venv/bin/activate

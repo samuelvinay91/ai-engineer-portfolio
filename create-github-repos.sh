@@ -12,7 +12,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STANDALONE_DIR="${SCRIPT_DIR}/standalone-repos"
-GITHUB_USER="${GITHUB_USER:-$(gh api user -q .login 2>/dev/null || echo "YOUR_USERNAME")}"
+GITHUB_USER="${GITHUB_USER:-$(gh api user -q .login 2>/dev/null || echo "samuelvinay91")}"
 DRY_RUN="${DRY_RUN:-0}"
 
 # Projects

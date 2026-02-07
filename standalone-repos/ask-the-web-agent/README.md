@@ -133,7 +133,6 @@ def should_fact_check(state):
 ### Option 1: Docker (Recommended)
 
 ```bash
-# From the repository root
 docker build -f Dockerfile \
   -t ask-the-web-agent .
 
@@ -149,13 +148,12 @@ docker run -p 8000:8000 \
 python -m venv .venv
 source .venv/bin/activate
 
-pip install -e .
-pip install -e "projects/03-ask-the-web-agent[dev]"
+pip install -e ".[dev]"
 
 export ANTHROPIC_API_KEY=your-key
 export TAVILY_API_KEY=your-tavily-key   # Get one free at tavily.com
 
-cd projects/03-ask-the-web-agent
+# Already in project root
 python -m ask_the_web.main
 ```
 
