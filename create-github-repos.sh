@@ -25,6 +25,8 @@ PROJECTS=(
   "capstone-multiagent"
   "agent-rag"
   "mcp-a2a"
+  "ucp-merchant-server"
+  "ucp-shopping-agent"
 )
 
 # Topics for each repo
@@ -37,6 +39,8 @@ declare -A TOPICS=(
   ["capstone-multiagent"]="multi-agent supervisor-pattern orchestration langgraph langchain fastapi docker cloud-native ai-engineer"
   ["agent-rag"]="rag retrieval-augmented-generation vector-search qdrant langgraph langchain fastapi docker ai-engineer"
   ["mcp-a2a"]="mcp model-context-protocol a2a agent-to-agent agentcard interoperability fastapi docker ai-engineer"
+  ["ucp-merchant-server"]="ucp universal-commerce-protocol agentic-commerce ap2 checkout-state-machine ecdsa mcp fastapi docker ai-engineer"
+  ["ucp-shopping-agent"]="ucp universal-commerce-protocol agentic-commerce shopping-agent langgraph multi-merchant comparison mcp fastapi docker ai-engineer"
 )
 
 # Descriptions
@@ -49,6 +53,8 @@ declare -A DESCRIPTIONS=(
   ["capstone-multiagent"]="Capstone: Multi-Agent AI Platform orchestrating specialized agents for complex task solving"
   ["agent-rag"]="Advanced Agent & RAG System with hierarchical retrieval, query decomposition, and multi-agent patterns"
   ["mcp-a2a"]="MCP Server/Client implementation and A2A protocol with AgentCards for agent interoperability"
+  ["ucp-merchant-server"]="UCP-compliant merchant platform with checkout state machine, AP2 payment verification, and MCP tool bindings"
+  ["ucp-shopping-agent"]="AI shopping agent that discovers UCP merchants, compares products, optimizes multi-vendor orders with LangGraph"
 )
 
 create_repo() {
