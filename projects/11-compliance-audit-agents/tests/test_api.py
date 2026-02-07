@@ -98,15 +98,11 @@ async def test_quick_check(client):
     resp = await client.post(
         "/api/v1/policies/check",
         json={
-            "transaction": {
-                "id": "txn-quick",
-                "timestamp": "2025-01-15T10:30:00Z",
-                "actor": "admin",
-                "action": "delete_personal_data",
-                "resource": "user-records",
-                "metadata": {"reason": "gdpr_request"},
-                "department": "IT",
-            }
+            "actor": "admin",
+            "action": "delete_personal_data",
+            "resource": "user-records",
+            "department": "IT",
+            "metadata": {"reason": "gdpr_request"},
         },
     )
     assert resp.status_code == 200

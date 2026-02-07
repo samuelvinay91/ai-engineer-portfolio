@@ -21,16 +21,12 @@ async def test_create_incident(client):
     resp = await client.post(
         "/api/v1/incidents",
         json={
-            "alert": {
-                "id": "alert-001",
-                "source": "prometheus",
-                "title": "High CPU on payment-service",
-                "description": "CPU usage exceeded 95% for 5 minutes",
-                "service": "payment-service",
-                "host": "k8s-node-01",
-                "timestamp": "2025-01-15T10:30:00Z",
-                "raw_data": {"cpu_percent": 97.5, "duration_minutes": 5},
-            }
+            "source": "prometheus",
+            "title": "High CPU on payment-service",
+            "description": "CPU usage exceeded 95% for 5 minutes",
+            "service": "payment-service",
+            "host": "k8s-node-01",
+            "raw_data": {"cpu_percent": 97.5, "duration_minutes": 5},
         },
     )
     assert resp.status_code == 200
@@ -45,16 +41,12 @@ async def test_get_incident(client):
     create_resp = await client.post(
         "/api/v1/incidents",
         json={
-            "alert": {
-                "id": "alert-002",
-                "source": "datadog",
-                "title": "OOM on order-processor",
-                "description": "Container killed due to memory limit",
-                "service": "order-processor",
-                "host": "k8s-node-02",
-                "timestamp": "2025-01-15T11:00:00Z",
-                "raw_data": {"memory_mb": 2048, "limit_mb": 2048},
-            }
+            "source": "datadog",
+            "title": "OOM on order-processor",
+            "description": "Container killed due to memory limit",
+            "service": "order-processor",
+            "host": "k8s-node-02",
+            "raw_data": {"memory_mb": 2048, "limit_mb": 2048},
         },
     )
     session_id = create_resp.json()["session_id"]
@@ -100,16 +92,12 @@ async def test_resolve_incident(client):
     create_resp = await client.post(
         "/api/v1/incidents",
         json={
-            "alert": {
-                "id": "alert-resolve",
-                "source": "test",
-                "title": "Test alert",
-                "description": "Test",
-                "service": "test-service",
-                "host": "test-host",
-                "timestamp": "2025-01-15T12:00:00Z",
-                "raw_data": {},
-            }
+            "source": "test",
+            "title": "Test alert",
+            "description": "Test",
+            "service": "test-service",
+            "host": "test-host",
+            "raw_data": {},
         },
     )
     session_id = create_resp.json()["session_id"]
@@ -130,16 +118,12 @@ async def test_human_takeover(client):
     create_resp = await client.post(
         "/api/v1/incidents",
         json={
-            "alert": {
-                "id": "alert-takeover",
-                "source": "test",
-                "title": "Complex issue",
-                "description": "Requires human investigation",
-                "service": "auth-service",
-                "host": "test-host",
-                "timestamp": "2025-01-15T13:00:00Z",
-                "raw_data": {},
-            }
+            "source": "test",
+            "title": "Complex issue",
+            "description": "Requires human investigation",
+            "service": "auth-service",
+            "host": "test-host",
+            "raw_data": {},
         },
     )
     session_id = create_resp.json()["session_id"]
@@ -147,5 +131,8 @@ async def test_human_takeover(client):
     import asyncio
     await asyncio.sleep(0.5)
 
-    resp = await client.post(f"/api/v1/incidents/{session_id}/takeover")
+    resp = await client.post(
+        f"/api/v1/incidents/{session_id}/takeover",
+        json={"operator": "test-engineer", "reason": "Manual investigation needed"},
+    )
     assert resp.status_code in (200, 400)

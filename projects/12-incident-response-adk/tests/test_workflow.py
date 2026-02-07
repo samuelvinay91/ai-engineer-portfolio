@@ -33,7 +33,7 @@ async def test_context_enricher():
 async def test_triage_agent():
     """TriageAgent classifies severity correctly."""
     from incident_response.agents.triage import TriageAgent
-    from incident_response.models import Alert
+    from incident_response.models import Alert, IncidentContext, SeverityLevel
 
     agent = TriageAgent()
     # Critical alert should get P1 or P2
@@ -47,65 +47,89 @@ async def test_triage_agent():
         timestamp="2025-01-15T10:00:00Z",
         raw_data={"status": "down"},
     )
+    incident_context = IncidentContext(
+        alert=alert,
+        service_info={"tier": "critical"},
+        recent_deploys=[],
+        owner_team="payments",
+        related_incidents=[],
+    )
 
-    result = await agent.run({"alert": alert})
+    result = await agent.run({"alert": alert, "incident_context": incident_context})
     assert "severity" in result
-    assert result["severity"] in ("P1", "P2")
+    assert result["severity"] in (SeverityLevel.P1, SeverityLevel.P2)
 
 
 @pytest.mark.asyncio
 async def test_log_analyzer():
     """LogAnalyzerAgent finds correlated errors."""
     from incident_response.agents.log_analyzer import LogAnalyzerAgent
+    from incident_response.models import Alert
 
     agent = LogAnalyzerAgent()
-    result = await agent.run({
-        "service": "payment-service",
-        "timerange": "1h",
-    })
-    assert "diagnostic" in result or "findings" in result
+    alert = Alert(
+        id="alert-log-test",
+        source="prometheus",
+        title="High error rate",
+        description="Error rate spike on payment-service",
+        service="payment-service",
+        host="node-01",
+    )
+    result = await agent.run({"alert": alert})
+    assert "log_diagnostics" in result
 
 
 @pytest.mark.asyncio
 async def test_metrics_checker():
     """MetricsCheckerAgent detects anomalies."""
     from incident_response.agents.metrics_checker import MetricsCheckerAgent
+    from incident_response.models import Alert
 
     agent = MetricsCheckerAgent()
-    result = await agent.run({
-        "service": "payment-service",
-        "timerange": "1h",
-    })
-    assert "diagnostic" in result or "findings" in result
+    alert = Alert(
+        id="alert-metrics-test",
+        source="prometheus",
+        title="CPU spike on payment-service",
+        description="CPU at 95%",
+        service="payment-service",
+        host="node-01",
+    )
+    result = await agent.run({"alert": alert})
+    assert "metrics_diagnostics" in result
 
 
 @pytest.mark.asyncio
 async def test_config_auditor():
     """ConfigAuditorAgent detects config drift."""
     from incident_response.agents.config_auditor import ConfigAuditorAgent
+    from incident_response.models import Alert
 
     agent = ConfigAuditorAgent()
-    result = await agent.run({
-        "service": "payment-service",
-    })
-    assert "diagnostic" in result or "findings" in result
+    alert = Alert(
+        id="alert-config-test",
+        source="prometheus",
+        title="Config drift detected",
+        description="Configuration mismatch on payment-service",
+        service="payment-service",
+        host="node-01",
+    )
+    result = await agent.run({"alert": alert})
+    assert "config_diagnostics" in result
 
 
 @pytest.mark.asyncio
 async def test_mock_alerts():
     """Mock data provides realistic alerts."""
-    from incident_response.mock_data.alerts import get_mock_alerts
+    from incident_response.mock_data.alerts import MOCK_ALERTS
 
-    alerts = get_mock_alerts()
-    assert len(alerts) >= 5
-    services = {a.service for a in alerts}
+    assert len(MOCK_ALERTS) >= 5
+    services = {a.service for a in MOCK_ALERTS}
     assert len(services) >= 3
 
 
 @pytest.mark.asyncio
 async def test_mock_infrastructure():
     """Mock infrastructure data is available."""
-    from incident_response.mock_data.infrastructure import get_service_registry
+    from incident_response.mock_data.infrastructure import SERVICE_REGISTRY
 
-    registry = get_service_registry()
-    assert len(registry) >= 5
+    assert len(SERVICE_REGISTRY) >= 5

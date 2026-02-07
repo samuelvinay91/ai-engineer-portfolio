@@ -2,19 +2,15 @@
 
 import pytest
 
-from ucp_merchant.config import MerchantSettings
-from ucp_merchant.main import create_app
+from ucp_merchant.config import UCPMerchantSettings
+from ucp_merchant.api import create_app
 
 
 @pytest.fixture
 def settings():
     """Create test settings."""
-    return MerchantSettings(
+    return UCPMerchantSettings(
         environment="testing",
-        merchant_name="Test Store",
-        merchant_domain="test.example.com",
-        ap2_enabled=True,
-        mcp_enabled=True,
     )
 
 

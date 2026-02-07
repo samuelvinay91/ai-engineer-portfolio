@@ -125,19 +125,17 @@ async def test_negotiation_strategist():
 @pytest.mark.asyncio
 async def test_mock_contracts():
     """Mock data provides sample contracts."""
-    from contract_lifecycle.mock_data.contracts import get_mock_contracts
+    from contract_lifecycle.mock_data.contracts import MOCK_CONTRACTS
 
-    contracts = get_mock_contracts()
-    assert len(contracts) >= 3
+    assert len(MOCK_CONTRACTS) >= 3
 
 
 @pytest.mark.asyncio
 async def test_mock_templates():
     """Mock data provides contract templates."""
-    from contract_lifecycle.mock_data.templates import get_contract_templates
+    from contract_lifecycle.mock_data.templates import CONTRACT_TEMPLATES
 
-    templates = get_contract_templates()
-    assert len(templates) >= 2
+    assert len(CONTRACT_TEMPLATES) >= 2
 
 
 @pytest.mark.asyncio
