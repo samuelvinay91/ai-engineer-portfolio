@@ -95,6 +95,7 @@ A curated collection of the highest-quality resources for progressing from AI En
 
 | Resource | Description | Why It Matters |
 |----------|-------------|----------------|
+| [AI Weekly](https://aiweekly.co/) | Tracks what influential AI experts and organizations are reading and sharing, then ranks and explains developments in models, agents, funding, policy, and research | A concise three-times-weekly way for AI engineers to keep up with technical and industry changes without following every source individually |
 | [Lilian Weng -- Lil'Log](https://lilianweng.github.io/) | Deep technical posts that read like mini research papers with clear explanations; covers RL, transformers, test-time compute, and the math behind modern AI | The single highest signal-to-noise ratio blog in AI; when Lilian publishes, it becomes the canonical reference for that topic |
 | [Chip Huyen](https://huyenchip.com/blog/) | Production ML systems, deployment challenges, MLOps, and engineering discipline from a Stanford lecturer and NVIDIA/Snorkel veteran | The essential counterweight to research-focused content; focuses on the operational realities that determine whether AI systems actually work in production |
 | [Simon Willison](https://simonwillison.net/) | Builder-perspective exploration of LLMs: experiments, workflows, tool evaluations, and honest assessments of what works (and what doesn't) | The best blog for staying current on the practical LLM tooling landscape; his weekly digests are a reliable filter on the AI noise |
